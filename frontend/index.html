@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>College Event Management</title>
+
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -19,18 +24,28 @@
             text-align: center;
         }
 
+        header h1 {
+            margin-top: 0;
+        }
+
         main {
             max-width: 800px;
             margin: 30px auto;
             padding: 20px;
         }
 
-        .event, #registration {
+        .event,
+        #registration {
             background: white;
             padding: 20px;
             margin-bottom: 16px;
             border-radius: 10px;
             box-shadow: 0 2px 8px #0001;
+        }
+
+        .event h3 {
+            color: #263b80;
+            margin-top: 0;
         }
 
         button {
@@ -42,14 +57,23 @@
             cursor: pointer;
         }
 
-        input, select {
+        button:hover {
+            background: #1b2b60;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        input {
             display: block;
             width: 100%;
-            box-sizing: border-box;
             padding: 12px;
             margin: 10px 0 16px;
             border: 1px solid #ccc;
             border-radius: 6px;
+            font-size: 15px;
         }
 
         #registration {
@@ -57,11 +81,34 @@
         }
 
         #message {
-            color: green;
             font-weight: bold;
+            overflow-wrap: anywhere;
+        }
+
+        #eventsList {
+            margin-top: 20px;
+        }
+
+        .error {
+            color: #c62828;
+        }
+
+        .info {
+            color: #263b80;
+        }
+
+        .success {
+            color: #218838;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
         }
     </style>
 </head>
+
 <body>
 
 <header>
@@ -70,69 +117,222 @@
 </header>
 
 <main>
-    <h2>Upcoming Events</h2>
-
-    <div class="event">
-        <h3>Tech Fest 2026</h3>
-        <p>Explore technology, coding and innovation.</p>
-        <button onclick="openForm('Tech Fest 2026')">Register</button>
-    </div>
-
-    <div class="event">
-        <h3>Cultural Fest 2026</h3>
-        <p>Enjoy music, dance and cultural activities.</p>
-        <button onclick="openForm('Cultural Fest 2026')">Register</button>
-    </div>
+    <section>
+        <h2>Upcoming Events</h2>
+        <div id="eventsList" class="info">Loading events...</div>
+    </section>
 
     <section id="registration">
         <h2>Event Registration</h2>
 
         <form id="registrationForm">
+
             <label for="eventName">Selected Event</label>
-            <input id="eventName" name="eventName" readonly>
+            <input
+                id="eventName"
+                name="eventName"
+                readonly
+                required
+            >
 
             <label for="studentName">Student Name</label>
-            <input id="studentName" name="studentName"
-                   required placeholder="Enter your full name">
+            <input
+                id="studentName"
+                name="studentName"
+                type="text"
+                placeholder="Enter your full name"
+                required
+            >
 
             <label for="email">Email Address</label>
-            <input id="email" name="email" type="email"
-                   required placeholder="Enter your email">
+            <input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="Enter your email"
+                required
+            >
 
             <label for="rollNumber">Roll Number</label>
-            <input id="rollNumber" name="rollNumber"
-                   required placeholder="Enter your roll number">
+            <input
+                id="rollNumber"
+                name="rollNumber"
+                type="text"
+                placeholder="Enter your roll number"
+                required
+            >
 
-            <button type="submit">Submit Registration</button>
+            <button id="submitButton" type="submit">
+                Submit Registration
+            </button>
         </form>
 
-        <p id="message" role="status"></p>
+        <p id="message" role="status" aria-live="polite"></p>
     </section>
 </main>
 
+<footer>
+    <p>College Event Management System</p>
+</footer>
+
 <script>
-    function openForm(event) {
-        document.getElementById("registration").style.display = "block";
-        document.getElementById("eventName").value = event;
-        document.getElementById("message").textContent = "";
-        document.getElementById("registration").scrollIntoView({
-            behavior: "smooth"
+    const API_URL = "http://localhost:5000";
+
+    // 1. Load events from the backend
+    async function loadEvents() {
+        const eventsList = document.getElementById("eventsList");
+
+        eventsList.className = "info";
+        eventsList.textContent = "Loading events...";
+
+        try {
+            const response = await fetch(`${API_URL}/events`);
+
+            if (!response.ok) {
+                throw new Error("Unable to fetch events.");
+            }
+
+            const events = await response.json();
+
+            eventsList.replaceChildren();
+
+            if (!Array.isArray(events) || events.length === 0) {
+                eventsList.textContent =
+                    "No events available yet. Please check again later.";
+                return;
+            }
+
+            events.forEach(function(event) {
+                const card = document.createElement("div");
+                card.className = "event";
+
+                const title = document.createElement("h3");
+                title.textContent = event.name || "Untitled Event";
+
+                const date = document.createElement("p");
+                date.textContent =
+                    "Date: " + (event.date || "Not specified");
+
+                const venue = document.createElement("p");
+                venue.textContent =
+                    "Venue: " + (event.venue || "Not specified");
+
+                const registerButton = document.createElement("button");
+                registerButton.type = "button";
+                registerButton.textContent = "Register";
+
+                registerButton.addEventListener("click", function() {
+                    openForm(event.name);
+                });
+
+                card.append(title, date, venue, registerButton);
+                eventsList.appendChild(card);
+            });
+
+        } catch (error) {
+            eventsList.className = "error";
+            eventsList.textContent =
+                "Unable to load events. Please check whether the backend server is running.";
+
+            console.error("Events loading error:", error);
+        }
+    }
+
+    // 2. Open registration form for the selected event
+    function openForm(eventName) {
+        if (!eventName) {
+            return;
+        }
+
+        const registration = document.getElementById("registration");
+        const message = document.getElementById("message");
+
+        registration.style.display = "block";
+        document.getElementById("eventName").value = eventName;
+
+        message.textContent = "";
+        message.className = "";
+
+        registration.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
         });
     }
 
+    // 3. Submit student registration to the backend
     document.getElementById("registrationForm")
-        .addEventListener("submit", function(e) {
+        .addEventListener("submit", async function(e) {
             e.preventDefault();
 
-            const name = document.getElementById("studentName").value;
+            const data = {
+                eventName: document.getElementById("eventName").value.trim(),
+                studentName: document.getElementById("studentName").value.trim(),
+                email: document.getElementById("email").value.trim(),
+                rollNumber: document.getElementById("rollNumber").value.trim()
+            };
 
-            document.getElementById("message").textContent =
-                "Thank you, " + name +
-                "! Your registration form was submitted successfully.";
+            const message = document.getElementById("message");
+            const submitButton = document.getElementById("submitButton");
 
-            this.reset();
-            document.getElementById("registration").style.display = "block";
+            if (
+                !data.eventName ||
+                !data.studentName ||
+                !data.email ||
+                !data.rollNumber
+            ) {
+                message.className = "error";
+                message.textContent = "Please fill in all the fields.";
+                return;
+            }
+
+            message.className = "info";
+            message.textContent = "Submitting registration...";
+            submitButton.disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}/registrations`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json().catch(function() {
+                    return {};
+                });
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error || result.message ||
+                        "Registration failed. Please try again."
+                    );
+                }
+
+                message.className = "success";
+                message.textContent =
+                    "Thank you, " + data.studentName +
+                    "! Your registration was saved successfully.";
+
+                // Clear student details after successful registration
+                document.getElementById("studentName").value = "";
+                document.getElementById("email").value = "";
+                document.getElementById("rollNumber").value = "";
+
+            } catch (error) {
+                message.className = "error";
+                message.textContent =
+                    "Registration failed: " + error.message;
+
+                console.error("Registration error:", error);
+
+            } finally {
+                submitButton.disabled = false;
+            }
         });
+
+    // 4. Load events when the webpage opens
+    loadEvents();
 </script>
 
 </body>

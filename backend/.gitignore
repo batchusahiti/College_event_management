@@ -1,2 +1,6 @@
 node_modules/
+<<<<<<< HEAD
 .env
+=======
+.env
+>>>>>>> 043b0cc (Add database features)
