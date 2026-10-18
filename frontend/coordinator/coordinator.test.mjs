@@ -49,7 +49,7 @@ test("accepts a complete coordinator report", () => {
 
 test("demo data contains realistic events and registrations", () => {
   assert.equal(DEMO_EVENTS.length, 3);
-  assert.equal(DEMO_REGISTRATIONS.length, 15);
+  assert.equal(DEMO_REGISTRATIONS.length, 23);
   assert.ok(DEMO_REGISTRATIONS.every((registration) => typeof registration.present === "boolean"));
 });
 
@@ -57,9 +57,9 @@ test("calculates summary, event, and department attendance from source records",
   const report = calculateCoordinatorReport(DEMO_EVENTS, DEMO_REGISTRATIONS);
   assert.deepEqual(report.summary, {
     totalEvents: 3,
-    registeredStudents: 15,
-    presentStudents: 12,
-    attendancePercentage: 80,
+    registeredStudents: 23,
+    presentStudents: 17,
+    attendancePercentage: 73.91,
   });
   assert.deepEqual(
     report.events.map(({ name, registeredStudents, presentStudents, attendancePercentage }) => ({
@@ -69,9 +69,9 @@ test("calculates summary, event, and department attendance from source records",
       attendancePercentage,
     })),
     [
-      { name: "New Student Orientation", registeredStudents: 6, presentStudents: 5, attendancePercentage: 83.33 },
-      { name: "Campus Innovation Fair", registeredStudents: 5, presentStudents: 4, attendancePercentage: 80 },
-      { name: "Cultural Night", registeredStudents: 4, presentStudents: 3, attendancePercentage: 75 },
+      { name: "New Student Orientation", registeredStudents: 8, presentStudents: 6, attendancePercentage: 75 },
+      { name: "Campus Innovation Fair", registeredStudents: 8, presentStudents: 6, attendancePercentage: 75 },
+      { name: "Cultural Night", registeredStudents: 7, presentStudents: 5, attendancePercentage: 71.43 },
     ],
   );
   assert.deepEqual(
@@ -82,10 +82,14 @@ test("calculates summary, event, and department attendance from source records",
       attendancePercentage,
     })),
     [
-      { name: "Computer Science", registeredStudents: 5, presentStudents: 5, attendancePercentage: 100 },
-      { name: "Engineering", registeredStudents: 4, presentStudents: 2, attendancePercentage: 50 },
-      { name: "Business", registeredStudents: 3, presentStudents: 3, attendancePercentage: 100 },
-      { name: "Arts and Humanities", registeredStudents: 3, presentStudents: 2, attendancePercentage: 66.67 },
+      { name: "CSE", registeredStudents: 2, presentStudents: 2, attendancePercentage: 100 },
+      { name: "AIML", registeredStudents: 3, presentStudents: 3, attendancePercentage: 100 },
+      { name: "CST", registeredStudents: 3, presentStudents: 2, attendancePercentage: 66.67 },
+      { name: "ECE", registeredStudents: 3, presentStudents: 2, attendancePercentage: 66.67 },
+      { name: "EEE", registeredStudents: 3, presentStudents: 2, attendancePercentage: 66.67 },
+      { name: "MECH", registeredStudents: 3, presentStudents: 2, attendancePercentage: 66.67 },
+      { name: "CIVIL", registeredStudents: 3, presentStudents: 2, attendancePercentage: 66.67 },
+      { name: "IT", registeredStudents: 3, presentStudents: 2, attendancePercentage: 66.67 },
     ],
   );
 });
@@ -146,20 +150,32 @@ test("rejects missing or invalid source data and duplicate event registrations",
   );
 });
 
-test("filters a report by selected id and leaves all rows for an empty filter", () => {
-  assert.deepEqual(filterRows(sampleReport.events, "fair"), [sampleReport.events[1]]);
-  assert.deepEqual(filterRows(sampleReport.events, ""), sampleReport.events);
+test("filters demo event and department reports by selected id", () => {
+  const report = calculateCoordinatorReport(DEMO_EVENTS, DEMO_REGISTRATIONS);
+  assert.deepEqual(filterRows(report.events, "innovation-fair-2026"), [report.events[1]]);
+  assert.deepEqual(filterRows(report.departments, "AIML"), [report.departments[1]]);
+  assert.deepEqual(filterRows(report.events, ""), report.events);
+  assert.deepEqual(filterRows(report.departments, ""), report.departments);
 });
 
-test("creates a CSV containing the event and department report rows", () => {
-  const csv = createAttendanceCsv(sampleReport.events, sampleReport.departments);
+test("creates a CSV containing current demo event and department report rows", () => {
+  const report = calculateCoordinatorReport(DEMO_EVENTS, DEMO_REGISTRATIONS);
+  const csv = createAttendanceCsv(report.events, report.departments);
   assert.equal(
     csv,
     [
       '"report_type","name","registered_students","present_students","attendance_percentage"',
-      '"event","Orientation","80","64","80"',
-      '"event","Clubs Fair","40","26","65"',
-      '"department","Engineering","70","56","80"',
+      '"event","New Student Orientation","8","6","75"',
+      '"event","Campus Innovation Fair","8","6","75"',
+      '"event","Cultural Night","7","5","71.43"',
+      '"department","CSE","2","2","100"',
+      '"department","AIML","3","3","100"',
+      '"department","CST","3","2","66.67"',
+      '"department","ECE","3","2","66.67"',
+      '"department","EEE","3","2","66.67"',
+      '"department","MECH","3","2","66.67"',
+      '"department","CIVIL","3","2","66.67"',
+      '"department","IT","3","2","66.67"',
     ].join("\r\n"),
   );
 });

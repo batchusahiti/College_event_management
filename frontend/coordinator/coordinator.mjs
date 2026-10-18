@@ -244,7 +244,6 @@ function populateFilter(select, rows, allLabel) {
 
 function initializeDashboard() {
   const status = document.querySelector("#page-status");
-  const dataSource = document.querySelector("#data-source");
   const eventFilter = document.querySelector("#event-filter");
   const departmentFilter = document.querySelector("#department-filter");
   const eventBody = document.querySelector("#event-report");
@@ -282,7 +281,6 @@ function initializeDashboard() {
 
   const api = window.coordinatorReportsApi;
   const useApi = api && typeof api.loadReport === "function";
-  dataSource.hidden = Boolean(useApi);
 
   status.textContent = "Loading attendance reports…";
   Promise.resolve()
