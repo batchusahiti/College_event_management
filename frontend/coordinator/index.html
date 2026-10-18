@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Coordinator Dashboard</title>
+    <link rel="stylesheet" href="./coordinator.css">
+    <script type="module" src="./coordinator.mjs"></script>
+  </head>
+  <body>
+    <main class="dashboard">
+      <header class="page-header">
+        <div>
+          <p class="eyebrow">Smart Campus Event Management</p>
+          <h1>Coordinator Dashboard</h1>
+          <p class="subtitle">Attendance overview and reports</p>
+          <p class="eyebrow" id="data-source">Demo Mode — Sample Data</p>
+        </div>
+        <button class="button button-primary" id="download-csv" type="button" disabled>
+          Download CSV
+        </button>
+      </header>
+
+      <section aria-labelledby="overview-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">At a glance</p>
+            <h2 id="overview-heading">Overall summary</h2>
+          </div>
+        </div>
+        <div class="summary-grid" id="summary-cards" aria-live="polite">
+          <article class="summary-card" data-metric="totalEvents">
+            <h3>Total events</h3>
+            <p class="metric-value">—</p>
+          </article>
+          <article class="summary-card" data-metric="registeredStudents">
+            <h3>Registered students</h3>
+            <p class="metric-value">—</p>
+          </article>
+          <article class="summary-card" data-metric="presentStudents">
+            <h3>Present students</h3>
+            <p class="metric-value">—</p>
+          </article>
+          <article class="summary-card" data-metric="attendancePercentage">
+            <h3>Attendance</h3>
+            <p class="metric-value">—</p>
+          </article>
+        </div>
+      </section>
+
+      <div id="page-status" class="status-message" role="status" aria-live="polite">
+        Loading attendance reports…
+      </div>
+
+      <section class="report-section" aria-labelledby="events-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">By event</p>
+            <h2 id="events-heading">Event-wise attendance</h2>
+          </div>
+          <label class="filter-control" for="event-filter">
+            Filter event
+            <select id="event-filter" disabled>
+              <option value="">All events</option>
+            </select>
+          </label>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Event</th>
+                <th scope="col">Registered students</th>
+                <th scope="col">Present students</th>
+                <th scope="col">Attendance</th>
+              </tr>
+            </thead>
+            <tbody id="event-report">
+              <tr><td class="table-message" colspan="4">Loading event report…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="report-section" aria-labelledby="departments-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">By department</p>
+            <h2 id="departments-heading">Department-wise attendance</h2>
+          </div>
+          <label class="filter-control" for="department-filter">
+            Filter department
+            <select id="department-filter" disabled>
+              <option value="">All departments</option>
+            </select>
+          </label>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Department</th>
+                <th scope="col">Registered students</th>
+                <th scope="col">Present students</th>
+                <th scope="col">Attendance</th>
+              </tr>
+            </thead>
+            <tbody id="department-report">
+              <tr><td class="table-message" colspan="4">Loading department report…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
