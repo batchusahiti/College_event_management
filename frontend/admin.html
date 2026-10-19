@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard - College Event Management</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f3f4f6;
+    color: #222;
+}
+
+header {
+    background: #263b80;
+    color: white;
+    padding: 20px;
+}
+
+.header-content {
+    max-width: 1100px;
+    margin: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+header h1, header p { margin: 5px 0; }
+
+main {
+    max-width: 1100px;
+    margin: 25px auto;
+    padding: 0 18px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.stat-card, .card {
+    background: white;
+    padding: 22px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px #0001;
+}
+
+.stat-card h3 { margin-top: 0; color: #555; }
+
+.stat-card p {
+    font-size: 30px;
+    font-weight: bold;
+    color: #263b80;
+    margin-bottom: 0;
+}
+
+.card { margin-bottom: 24px; }
+
+label {
+    display: block;
+    margin-top: 12px;
+}
+
+input, select {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: white;
+}
+
+button {
+    background: #263b80;
+    color: white;
+    border: none;
+    padding: 11px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    margin: 3px;
+}
+
+button:hover { opacity: 0.88; }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.logout, .delete-button { background: #b42318; }
+.edit-button { background: #087443; }
+
+.table-container {
+    overflow-x: auto;
+    margin-top: 16px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+th, td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+
+th { background: #263b80; color: white; }
+tr:nth-child(even) { background: #f8f9fc; }
+
+.message {
+    font-weight: bold;
+    overflow-wrap: anywhere;
+}
+
+.event-item {
+    padding: 16px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.event-item h3 { margin: 4px 0 8px; }
+.event-item p { line-height: 1.5; }
+
+.filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    align-items: end;
+}
+
+@media (max-width: 600px) {
+    .header-content { justify-content: center; }
+    header h1 { font-size: 24px; }
+    .card, .stat-card { padding: 16px; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="header-content">
+        <div>
+            <h1>Admin Dashboard</h1>
+            <p>College Event Management System</p>
+        </div>
+        <button type="button" class="logout" id="logoutButton">
+            Logout
+        </button>
+    </div>
+</header>
+
+<main>
+
+    <section class="stats">
+        <div class="stat-card">
+            <h3>Total Events</h3>
+            <p id="totalEvents">0</p>
+        </div>
+        <div class="stat-card">
+            <h3>Total Registrations</h3>
+            <p id="totalRegistrations">0</p>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Add New Event</h2>
+
+        <form id="eventForm">
+            <label for="eventName">Event Name</label>
+            <input id="eventName" required maxlength="150"
+                   placeholder="Enter event name">
+
+            <label for="eventDate">Event Date</label>
+            <input id="eventDate" type="date" required>
+
+            <label for="eventVenue">Event Venue</label>
+            <input id="eventVenue" required maxlength="200"
+                   placeholder="Enter event venue">
+
+            <label for="eventDepartment">Department</label>
+            <select id="eventDepartment">
+                <option value="General">General</option>
+                <option value="CSE">CSE</option>
+                <option value="ECE">ECE</option>
+                <option value="EEE">EEE</option>
+                <option value="IT">IT</option>
+                <option value="Mechanical">Mechanical</option>
+                <option value="Civil">Civil</option>
+            </select>
+
+            <button type="submit" id="addButton">Add Event</button>
+        </form>
+
+        <p id="eventMessage" class="message" role="status"></p>
+    </section>
+
+    <section class="card">
+        <h2>Available Events</h2>
+
+        <div class="filters">
+            <div>
+                <label for="departmentFilter">Filter by Department</label>
+                <select id="departmentFilter">
+                    <option value="">All Departments</option>
+                    <option value="General">General</option>
+                    <option value="CSE">CSE</option>
+                    <option value="ECE">ECE</option>
+                    <option value="EEE">EEE</option>
+                    <option value="IT">IT</option>
+                    <option value="Mechanical">Mechanical</option>
+                    <option value="Civil">Civil</option>
+                </select>
+            </div>
+            <div>
+                <button type="button" id="refreshEventsButton">
+                    Refresh Events
+                </button>
+            </div>
+        </div>
+
+        <div id="eventsList" aria-live="polite">Loading events...</div>
+    </section>
+
+    <section class="card">
+        <h2>Registered Students</h2>
+
+        <label for="eventFilter">Filter by Event</label>
+        <select id="eventFilter">
+            <option value="">All Events</option>
+        </select>
+
+        <button type="button" id="refreshRegistrationsButton">
+            Refresh Registrations
+        </button>
+
+        <p id="registrationMessage" class="message" role="status"></p>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Event Name</th>
+                        <th>Student Name</th>
+                        <th>Email</th>
+                        <th>Roll Number</th>
+                    </tr>
+                </thead>
+                <tbody id="registrationTable">
+                    <tr><td colspan="4">Loading registrations...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+
+<script>
+"use strict";
+
+const API = "http://localhost:5000";
+
+function getAdminToken() {
+    return sessionStorage.getItem("adminToken");
+}
+
+// Redirect to login if there is no saved token.
+if (!getAdminToken()) {
+    window.location.replace("admin-login.html");
+}
+
+let allEvents = [];
+let allRegistrations = [];
+
+function logout() {
+    sessionStorage.removeItem("adminToken");
+    window.location.replace("admin-login.html");
+}
+
+document.getElementById("logoutButton").addEventListener("click", logout);
+
+// Shared API request function.
+async function apiRequest(path, options = {}) {
+    const token = getAdminToken();
+
+    if (!token) {
+        logout();
+        throw new Error("Please log in again.");
+    }
+
+    const headers = {
+        ...(options.headers || {}),
+        "Authorization": "Bearer " + token
+    };
+
+    const response = await fetch(API + path, {
+        ...options,
+        headers
+    });
+
+    const contentType = response.headers.get("content-type") || "";
+    let result;
+
+    if (contentType.includes("application/json")) {
+        result = await response.json();
+    } else {
+        result = { error: await response.text() || "Unexpected response" };
+    }
+
+    if (response.status === 401 || response.status === 403) {
+        logout();
+        throw new Error("Login expired. Please log in again.");
+    }
+
+    if (!response.ok) {
+        throw new Error(
+            result.error || result.message || "Request failed: " + response.status
+        );
+    }
+
+    return result;
+}
+
+function showMessage(elementId, text, color) {
+    const element = document.getElementById(elementId);
+    element.textContent = text;
+    element.style.color = color;
+}
+
+function showTableMessage(text) {
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = 4;
+    cell.textContent = text;
+    row.appendChild(cell);
+    document.getElementById("registrationTable").replaceChildren(row);
+}
+
+// Add event.
+document.getElementById("eventForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const button = document.getElementById("addButton");
+    button.disabled = true;
+    showMessage("eventMessage", "Adding event...", "#263b80");
+
+    const eventData = {
+        name: document.getElementById("eventName").value.trim(),
+        date: document.getElementById("eventDate").value,
+        venue: document.getElementById("eventVenue").value.trim(),
+        department: document.getElementById("eventDepartment").value
+    };
+
+    try {
+        await apiRequest("/events", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(eventData)
+        });
+
+        this.reset();
+        document.getElementById("eventDepartment").value = "General";
+        showMessage("eventMessage", "Event added successfully!", "green");
+
+        await loadEvents();
+    } catch (error) {
+        showMessage("eventMessage", error.message, "red");
+    } finally {
+        button.disabled = false;
+    }
+});
+
+// Edit event.
+async function editEvent(event) {
+    const name = prompt("Event name:", event.name);
+    if (name === null) return;
+
+    const date = prompt("Event date (YYYY-MM-DD):", event.date);
+    if (date === null) return;
+
+    const venue = prompt("Event venue:", event.venue);
+    if (venue === null) return;
+
+    const department = prompt(
+        "Department (CSE, ECE, EEE, IT, Mechanical, Civil, General):",
+        event.department || "General"
+    );
+    if (department === null) return;
+
+    if (![name, date, venue, department].every(value => value.trim())) {
+        alert("Please fill in all event fields.");
+        return;
+    }
+
+    try {
+        await apiRequest("/events/" + encodeURIComponent(event._id), {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: name.trim(),
+                date: date.trim(),
+                venue: venue.trim(),
+                department: department.trim()
+            })
+        });
+
+        alert("Event updated successfully!");
+        await loadEvents();
+    } catch (error) {
+        alert("Could not update event: " + error.message);
+    }
+}
+
+// Delete event.
+async function deleteEvent(event) {
+    const confirmed = confirm(
+        'Are you sure you want to delete "' + event.name + '"?'
+    );
+
+    if (!confirmed) return;
+
+    try {
+        await apiRequest("/events/" + encodeURIComponent(event._id), {
+            method: "DELETE"
+        });
+
+        alert("Event deleted successfully!");
+        await loadEvents();
+        await loadRegistrations();
+    } catch (error) {
+        alert("Could not delete event: " + error.message);
+    }
+}
+
+// Render event cards.
+function renderEvents() {
+    const container = document.getElementById("eventsList");
+    const department = document.getElementById("departmentFilter").value;
+
+    const filteredEvents = department
+        ? allEvents.filter(event =>
+            (event.department || "General").toLowerCase() === department.toLowerCase()
+        )
+        : allEvents;
+
+    container.replaceChildren();
+
+    if (filteredEvents.length === 0) {
+        container.textContent = "No events found for this filter.";
+        return;
+    }
+
+    filteredEvents.forEach(event => {
+        const item = document.createElement("div");
+        item.className = "event-item";
+
+        const title = document.createElement("h3");
+        title.textContent = event.name;
+
+        const details = document.createElement("p");
+        details.textContent =
+            "Date: " + (event.date || "-") +
+            " | Venue: " + (event.venue || "-") +
+            " | Department: " + (event.department || "General");
+
+        const editButton = document.createElement("button");
+        editButton.className = "edit-button";
+        editButton.textContent = "Edit";
+        editButton.addEventListener("click", () => editEvent(event));
+
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "delete-button";
+        deleteButton.textContent = "Delete";
+        deleteButton.addEventListener("click", () => deleteEvent(event));
+
+        item.append(title, details, editButton, deleteButton);
+        container.appendChild(item);
+    });
+}
+
+async function loadEvents() {
+    const container = document.getElementById("eventsList");
+    container.textContent = "Loading events...";
+
+    try {
+        const events = await apiRequest("/events");
+
+        if (!Array.isArray(events)) {
+            throw new Error("Unexpected events response.");
+        }
+
+        allEvents = events;
+        document.getElementById("totalEvents").textContent = allEvents.length;
+
+        renderEvents();
+        updateEventFilter();
+    } catch (error) {
+        container.textContent = "Unable to load events: " + error.message;
+    }
+}
+
+// Populate event registration filter.
+function updateEventFilter() {
+    const filter = document.getElementById("eventFilter");
+    const previousValue = filter.value;
+
+    const names = [
+        ...new Set(
+            allEvents.map(event => event.name)
+                .concat(allRegistrations.map(reg => reg.eventName))
+                .filter(Boolean)
+        )
+    ].sort((a, b) => a.localeCompare(b));
+
+    filter.replaceChildren();
+
+    const allOption = document.createElement("option");
+    allOption.value = "";
+    allOption.textContent = "All Events";
+    filter.appendChild(allOption);
+
+    names.forEach(name => {
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        filter.appendChild(option);
+    });
+
+    if (names.includes(previousValue)) {
+        filter.value = previousValue;
+    }
+}
+
+// Render filtered registrations.
+function renderRegistrations() {
+    const selectedEvent = document.getElementById("eventFilter").value;
+
+    const filtered = selectedEvent
+        ? allRegistrations.filter(reg => reg.eventName === selectedEvent)
+        : allRegistrations;
+
+    const table = document.getElementById("registrationTable");
+    table.replaceChildren();
+
+    if (filtered.length === 0) {
+        showTableMessage(
+            selectedEvent ? "No registrations for this event." : "No students registered yet."
+        );
+    } else {
+        filtered.forEach(registration => {
+            const row = document.createElement("tr");
+
+            [
+                registration.eventName,
+                registration.studentName,
+                registration.email,
+                registration.rollNumber
+            ].forEach(value => {
+                const cell = document.createElement("td");
+                cell.textContent = value || "-";
+                row.appendChild(cell);
+            });
+
+            table.appendChild(row);
+        });
+    }
+
+    document.getElementById("totalRegistrations").textContent =
+        allRegistrations.length;
+
+    showMessage(
+        "registrationMessage",
+        "Showing " + filtered.length + " of " + allRegistrations.length + " registrations.",
+        "green"
+    );
+}
+
+async function loadRegistrations() {
+    showMessage("registrationMessage", "Loading registrations...", "#263b80");
+    showTableMessage("Loading registrations...");
+
+    try {
+        const registrations = await apiRequest("/registrations");
+
+        if (!Array.isArray(registrations)) {
+            throw new Error("Unexpected registrations response.");
+        }
+
+        allRegistrations = registrations;
+        updateEventFilter();
+        renderRegistrations();
+    } catch (error) {
+        showMessage("registrationMessage", error.message, "red");
+        showTableMessage(error.message);
+    }
+}
+
+document.getElementById("departmentFilter")
+    .addEventListener("change", renderEvents);
+
+document.getElementById("eventFilter")
+    .addEventListener("change", renderRegistrations);
+
+document.getElementById("refreshEventsButton")
+    .addEventListener("click", loadEvents);
+
+document.getElementById("refreshRegistrationsButton")
+    .addEventListener("click", loadRegistrations);
+
+// Initial load.
+if (getAdminToken()) {
+    loadEvents();
+    loadRegistrations();
+}
+</script>
+
+</body>
+</html>

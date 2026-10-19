@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - College Event Management</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #dbeafe, #eef2ff);
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,.12);
+        }
+
+        h2 { text-align: center; color: #263b80; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 25px; }
+
+        label {
+            display: block;
+            margin: 15px 0 6px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 22px;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            background: #263b80;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:disabled { background: #888; cursor: wait; }
+
+        #message {
+            margin-top: 15px;
+            text-align: center;
+            overflow-wrap: anywhere;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 20px;
+            text-align: center;
+            color: #263b80;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <h2>Admin Login</h2>
+        <p class="subtitle">College Event Management System</p>
+
+        <form id="loginForm">
+            <label for="username">Username</label>
+            <input
+                type="text"
+                id="username"
+                autocomplete="username"
+                placeholder="Enter admin username"
+                required
+            >
+
+            <label for="password">Password</label>
+            <input
+                type="password"
+                id="password"
+                autocomplete="current-password"
+                placeholder="Enter admin password"
+                required
+            >
+
+            <button type="submit" id="loginButton">Login</button>
+            <p id="message" role="status" aria-live="polite"></p>
+        </form>
+
+        <a class="back-link" href="index.html">Back to Home</a>
+    </div>
+
+    <script>
+        const API = "http://localhost:5000";
+
+        const form = document.getElementById("loginForm");
+        const button = document.getElementById("loginButton");
+        const message = document.getElementById("message");
+
+        form.addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value;
+
+            button.disabled = true;
+            message.style.color = "#263b80";
+            message.textContent = "Logging in...";
+
+            try {
+                const response = await fetch(API + "/admin/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error || result.message || "Login failed"
+                    );
+                }
+
+                if (!result.token) {
+                    throw new Error("Login response did not contain a token");
+                }
+
+                sessionStorage.setItem("adminToken", result.token);
+
+                message.style.color = "green";
+                message.textContent = "Login successful! Opening dashboard...";
+
+                window.location.href = "admin.html";
+
+            } catch (error) {
+                message.style.color = "red";
+                message.textContent =
+                    error.message + ". Please check that the backend is running.";
+            } finally {
+                button.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

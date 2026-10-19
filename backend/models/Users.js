@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
@@ -23,6 +22,16 @@ const userSchema = new mongoose.Schema(
             type: String,
             enum: ["student", "organizer", "admin"],
             default: "student"
+        },
+        rollNumber: {
+            type: String,
+            trim: true,
+            uppercase: true
+        },
+        department: {
+            type: String,
+            trim: true,
+            default: "General"
         }
     },
     {
